@@ -8,7 +8,11 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
-source_files = [path for path in ROOT.glob("*.docx") if path.name.startswith("ราคากลางงานจัดซื้อพัสดุ ") and not path.name.startswith("~$")]
+ascii_source = ROOT / "base-template.docx"
+source_files = [ascii_source] if ascii_source.is_file() else [
+    path for path in ROOT.glob("*.docx")
+    if path.name.startswith("ราคากลางงานจัดซื้อพัสดุ ") and not path.name.startswith("~$")
+]
 frontend = ROOT / "frontend" / "dist"
 if len(source_files) != 1 or not (frontend / "index.html").is_file():
     raise SystemExit("ต้องมี DOCX ต้นฉบับหนึ่งไฟล์และ frontend/dist; รัน npm ci และ npm run build ใน frontend ก่อน")
@@ -25,9 +29,19 @@ subprocess.run(command, cwd=ROOT, check=True)
 destination = ROOT / "dist" / "QuotationLocal"
 examples = destination / "examples"
 examples.mkdir(exist_ok=True)
-for name in ("ต้นฉบับ สายช่างโยธา 70.docx", "ต้นฉบับ สายพลาธิการ 69.docx"):
-    path = ROOT / name
-    if path.is_file():
-        shutil.copy2(path, examples / name)
+example_sources = {
+    "civil-engineering-template-70.docx": (
+        ROOT / "examples" / "civil-engineering-template-70.docx",
+        ROOT / "ต้นฉบับ สายช่างโยธา 70.docx",
+    ),
+    "quartermaster-template-69.docx": (
+        ROOT / "examples" / "quartermaster-template-69.docx",
+        ROOT / "ต้นฉบับ สายพลาธิการ 69.docx",
+    ),
+}
+for output_name, candidates in example_sources.items():
+    path = next((candidate for candidate in candidates if candidate.is_file()), None)
+    if path is not None:
+        shutil.copy2(path, examples / output_name)
 shutil.copy2(ROOT / "README.md", destination / "README.md")
 print(f"พร้อมใช้งานที่ {destination}")

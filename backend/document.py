@@ -30,10 +30,22 @@ from .pricing import (
 
 
 PROJECT_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
-DEFAULT_SOURCE = next(
-    path for path in PROJECT_DIR.glob("*.docx")
-    if path.name.startswith("ราคากลางงานจัดซื้อพัสดุ ") and not path.name.startswith("~$")
-)
+
+
+def _find_default_source() -> Path:
+    ascii_source = PROJECT_DIR / "base-template.docx"
+    if ascii_source.is_file():
+        return ascii_source
+    sources = [
+        path for path in PROJECT_DIR.glob("*.docx")
+        if path.name.startswith("ราคากลางงานจัดซื้อพัสดุ ") and not path.name.startswith("~$")
+    ]
+    if len(sources) != 1:
+        raise FileNotFoundError("ไม่พบไฟล์แม่แบบหลัก base-template.docx หรือไฟล์แม่แบบภาษาไทย")
+    return sources[0]
+
+
+DEFAULT_SOURCE = _find_default_source()
 THAI_MONTHS = ("ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.")
 SUBJECT_PREFIX = "ราคากลางจัดซื้อพัสดุ"
 ENGINE_REVISION = "1.1.3"
