@@ -1,0 +1,1 @@
+"""Local quotation document application."""
